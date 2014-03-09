@@ -14,4 +14,4 @@ sub hanoi{
 	}
 }
 
-hanoi(3, 'A', 'C', 'B');
+hanoi(7, 'A', 'C', 'B');
