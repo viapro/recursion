@@ -21,41 +21,57 @@ sub total_size {
 }
 
 sub dir_walk {
-	my ($top, $code) = @_;
+	my ($top, $filefunc, $dirfunc) = @_;
 	my $DIR;
-	$code->($top);
 	if (-d $top) {
 		my $file;
 		unless (opendir $DIR, $top) {
-			warn "Couldn’t open directory $top: $!; skipping.\n";
+			warn "Couldn’t open directory $code: $!; skipping.\n";
 			return;
 		}
-	
+		my @results;
 		while ($file = readdir $DIR) {
 			next if $file eq '.' || $file eq '..';
-			dir_walk("$top/$file", $code);
+			push @results, dir_walk("$top/$file", $filefunc, $dirfunc);
 		}
-	}
-}
-
-# print(total_size("C:/Dev/Proj/recursion"));
-dir_walk("C:/Dev/Proj/recursion", sub {print $_[0], "\n";})
-
-
-# hanoi(N, start, end, extra)
-# Solve Tower of Hanoi problem for a tower of N disks,
-# of which the largest is disk #N. Move the entire tower from
-# peg 'start' to peg 'end', using peg 'extra' as a work space
-
-sub hanoi{
-	my ($n, $start, $end, $extra) = @_;
-	if($n==1){
-		print "Move disk #1 from $start to $end. \n";
+		return $dirfunc->($top, @results);
 	} else {
-		hanoi($n-1, $start, $extra, $end);
-		print "Move disk #$n from $start to $end. \n";		
-		hanoi($n-1, $extra, $end, $start);
+		return $filefunc->($top);
 	}
 }
 
-hanoi(3, 'A', 'C', 'B');
+sub file_size { -s $_[0] }
+sub dir_size {
+	my $dir = shift;
+	my $total = -s $dir;
+	my $n;
+	for $n (@_) { $total += $n }
+	return $total;
+}
+$total_size = dir_walk('.', \&file_size, \&dir_size);
+print "Total size is: ".$total_size." bytes";
+
+
+sub file {
+	my $file = shift;
+	[short($file), -s $file];
+}
+sub short {
+	my $path = shift;
+	$path =~s{.*/}{};
+	$path;
+}
+sub dir {
+	my ($dir, @subdirs) = @_;
+	my %new_hash;
+	for (@subdirs) {
+		my ($subdir_name, $subdir_structure) = @$_;
+		$new_hash{$subdir_name} = $subdir_structure;
+	}
+	return [short($dir), \%new_hash];
+}
+sub print_filename { print $_[0], "\n" }
+dir_walk('.', \&print_filename, \&print_filename);
+
+
+#carry op
