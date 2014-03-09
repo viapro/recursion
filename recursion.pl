@@ -51,3 +51,28 @@ sub dir_size {
 $total_size = dir_walk('.', \&file_size, \&dir_size);
 print "Total size is: ".$total_size." bytes";
 
+
+sub file {
+	my $file = shift;
+	[short($file), -s $file];
+}
+sub short {
+	my $path = shift;
+	$path =~s{.*/}{};
+	$path;
+}
+sub dir {
+	my ($dir, @subdirs) = @_;
+	my %new_hash;
+	for (@subdirs) {
+		my ($subdir_name, $subdir_structure) = @$_;
+		$new_hash{$subdir_name} = $subdir_structure;
+	}
+	return [short($dir), \%new_hash];
+}
+sub print_filename { print $_[0], "\n" }
+dir_walk('.', \&print_filename, \&print_filename);
+
+
+
+
