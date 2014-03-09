@@ -21,23 +21,33 @@ sub total_size {
 }
 
 sub dir_walk {
-	my ($top, $code) = @_;
+	my ($top, $filefunc, $dirfunc) = @_;
 	my $DIR;
-	$code->($top);
 	if (-d $top) {
 		my $file;
 		unless (opendir $DIR, $top) {
-			warn "Couldn’t open directory $top: $!; skipping.\n";
+			warn "Couldn’t open directory $code: $!; skipping.\n";
 			return;
 		}
-	
+		my @results;
 		while ($file = readdir $DIR) {
 			next if $file eq '.' || $file eq '..';
-			dir_walk("$top/$file", $code);
+			push @results, dir_walk("$top/$file", $filefunc, $dirfunc);
 		}
+		return $dirfunc->($top, @results);
+	} else {
+		return $filefunc->($top);
 	}
 }
 
-# print(total_size("C:/Dev/Proj/recursion"));
-dir_walk("C:/Dev/Proj/recursion", sub { printf "%6d %s\n", -s $_[0], $_[0] })
+sub file_size { -s $_[0] }
+sub dir_size {
+	my $dir = shift;
+	my $total = -s $dir;
+	my $n;
+	for $n (@_) { $total += $n }
+	return $total;
+}
+$total_size = dir_walk('.', \&file_size, \&dir_size);
+print "Total size is: ".$total_size." bytes";
 
