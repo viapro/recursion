@@ -39,4 +39,5 @@ sub dir_walk {
 }
 
 # print(total_size("C:/Dev/Proj/recursion"));
-dir_walk("C:/Dev/Proj/recursion", sub {print $_[0], "\n";})
+dir_walk("C:/Dev/Proj/recursion", sub { printf "%6d %s\n", -s $_[0], $_[0] })
+
